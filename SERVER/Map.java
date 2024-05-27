@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class Map {
-    int width;    
+    int width;
     int[][] map;
 
     public Map(int width) {
@@ -17,10 +17,30 @@ public class Map {
                 map[i][j] = rand.nextInt(11) - 5; // -5 ~ 5 사이의 랜덤한 숫자
             }
         }
+        Random randx = new Random();
+        Random randy = new Random();
+        int x1 = randx.nextInt(10);
+        int y1 = randy.nextInt(10);
+        map[x1][y1] = 20;
+
+        int x2 = randx.nextInt(10);
+        while( x2 == x1){
+            x2 = randx.nextInt(10);
+        }
+
+        int y2 = randy.nextInt(10);
+        while( y2 == y1){
+            y2 = randx.nextInt(10);
+        }
+        map[x2][y2] = 10;
+
+
     }
 
     public int checkCell(int x, int y) {
-        return map[x][y];
+        int value = map[x][y];
+        //map[x][y] = Integer.MIN_VALUE; // 이 칸은 이미 선택되었음을 표시
+        return value;
     }
 
     public int getCellValue(int x, int y) {
@@ -28,6 +48,7 @@ public class Map {
     }
 
     public void updateMap(int x, int y) {
-        // 여기에 필요하다면 특정한 업데이트 로직을 추가하세요
+        // 필요에 따라 맵을 업데이트합니다.
+        // 예를 들어, 이미 선택된 칸을 다른 색상으로 표시할 수 있습니다.
     }
 }

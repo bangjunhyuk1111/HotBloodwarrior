@@ -61,9 +61,11 @@ public class HotBloodWarriorServer {
         String userName = null;
         int x, y;
         public boolean turn = false;
+        int opponentId;
 
         public Client(Socket socket, int playerId) throws Exception {
             this.playerId = playerId;
+            this.opponentId = (playerId + 1) % maxPlayer;
             initial(socket);
             start();
         }
@@ -99,6 +101,7 @@ public class HotBloodWarriorServer {
                         send("value," + x + "," + y + "," + value);
                         send("ok");
                         sendToAll("HP " + hp[0] + " " + hp[1]);
+                        clients.get(opponentId).send("opponentValue," + x + "," + y + "," + value); // 상대방에게 선택 정보 전송
                         gui.updateHp();
                         nextPlayerTurn();
                     }
