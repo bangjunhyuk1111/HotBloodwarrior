@@ -50,8 +50,19 @@ class HotBloodWarriorClient {
     public static void handleServerMessage(String message) {
         if (message.startsWith("HP")) {
             String[] hpValues = message.split(" ");
-            hp = Integer.parseInt(hpValues[1 + playerId]);
-            opponentHp = Integer.parseInt(hpValues[2 - playerId]);
+            int newHp = Integer.parseInt(hpValues[1 + playerId]);
+            int newOpponentHp = Integer.parseInt(hpValues[2 - playerId]);
+
+            if (newHp < hp) {
+                playDamageSound(hp - newHp, "player");
+            }
+            if (newOpponentHp < opponentHp) {
+                playDamageSound(opponentHp - newOpponentHp, "opponent");
+            }
+
+            hp = newHp;
+            opponentHp = newOpponentHp;
+
             SwingUtilities.invokeLater(() -> {
                 gui.updateHp();
                 if (hp <= 0) {
@@ -61,7 +72,6 @@ class HotBloodWarriorClient {
                 if (opponentHp <= 0) {
                     JOptionPane.showMessageDialog(null, "무자비하게 상대를 박살냈다!!!  이 세상에 나를 막을 자는 없다!!! ");
                 }
-
             });
         } else if (message.equals("choose!")) {
             myTurn = true;
@@ -93,8 +103,10 @@ class HotBloodWarriorClient {
                 int value = Integer.parseInt(message);
                 if (value >= 0) {
                     opponentHp -= value;
+                    playDamageSound(value, "opponent");
                 } else {
                     hp += value;
+                    playDamageSound(-value, "player");
                 }
                 SwingUtilities.invokeLater(() -> {
                     gui.updateHp();
@@ -104,6 +116,44 @@ class HotBloodWarriorClient {
             }
         }
     }
+
+    public static void playDamageSound(int damage, String target) {
+        String soundPath = "C:/HotBloodWarrior/sound/";
+        if (target.equals("player")) {
+            switch (damage) {
+                case -5:
+                    soundPath += "damage_-5.wav";
+                    break;
+                case 10:
+                    soundPath += "damage_10.wav";
+                    break;
+                case 20:
+                    soundPath += "damage_20.wav";
+                    break;
+                default:
+                    soundPath += "damage_me.wav";
+                    break;
+            }
+        } else if (target.equals("opponent")) {
+            switch (damage) {
+                case -5:
+                    soundPath += "damage_-5.wav";
+                    break;
+                case 10:
+                    soundPath += "damage_10.wav";
+                    break;
+                case 20:
+                    soundPath += "damage_20.wav";
+                    break;
+                default:
+                    soundPath += "damage_enemy.wav";
+                    break;
+            }
+        }
+        playSound(soundPath);
+    }
+
+
 
     static class ClientGUI {
         JFrame frame;
@@ -318,4 +368,22 @@ class HotBloodWarriorClient {
             e.printStackTrace();
         }
     }
+    
+    public static void playSound(String filePath) {
+        try {
+            File soundFile = new File(filePath);
+            if (soundFile.exists()) {
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioInputStream);
+                clip.start();
+            } else {
+                System.out.println("Sound file not found: " + filePath);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }
