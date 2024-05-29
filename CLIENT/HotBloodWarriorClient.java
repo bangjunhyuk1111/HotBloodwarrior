@@ -20,6 +20,7 @@ class HotBloodWarriorClient {
     static int playerId;
     static boolean myTurn = false;
     static int turn = 1;
+    static String filePath; // 파일 경로 변수 추가
 
     public static void main(String[] args) {
         try (Socket socket = new Socket(address, inPort)) {
@@ -33,7 +34,19 @@ class HotBloodWarriorClient {
             playerId = Integer.parseInt(in.readLine());
 
             // BGM 재생
-            playBGM("C:/HotBloodWarrior/sound/bgm.wav");
+            String userHomeDir = System.getProperty("user.home");
+            String osName = System.getProperty("os.name").toLowerCase();
+            if (osName.contains("windows")) {
+                filePath = "C:/HotBloodWarrior/";
+                playBGM(filePath + "sound/bgm.wav");
+            } else if (osName.contains("mac")) {
+                System.out.println("성공");
+                filePath = userHomeDir + "/Desktop/HotBloodwarrior/CUSTOM/";
+                playBGM(filePath + "sound/bgm.wav");
+            } else {
+                System.out.println("Unsupported operating system");
+                return;
+            }
 
             // 서버로부터 초기 메시지 수신
             while (true) {
@@ -50,19 +63,8 @@ class HotBloodWarriorClient {
     public static void handleServerMessage(String message) {
         if (message.startsWith("HP")) {
             String[] hpValues = message.split(" ");
-            int newHp = Integer.parseInt(hpValues[1 + playerId]);
-            int newOpponentHp = Integer.parseInt(hpValues[2 - playerId]);
-
-            if (newHp < hp) {
-                playDamageSound(hp - newHp, "player");
-            }
-            if (newOpponentHp < opponentHp) {
-                playDamageSound(opponentHp - newOpponentHp, "opponent");
-            }
-
-            hp = newHp;
-            opponentHp = newOpponentHp;
-
+            hp = Integer.parseInt(hpValues[1 + playerId]);
+            opponentHp = Integer.parseInt(hpValues[2 - playerId]);
             SwingUtilities.invokeLater(() -> {
                 gui.updateHp();
                 if (hp <= 0) {
@@ -72,6 +74,7 @@ class HotBloodWarriorClient {
                 if (opponentHp <= 0) {
                     JOptionPane.showMessageDialog(null, "무자비하게 상대를 박살냈다!!!  이 세상에 나를 막을 자는 없다!!! ");
                 }
+
             });
         } else if (message.equals("choose!")) {
             myTurn = true;
@@ -103,10 +106,8 @@ class HotBloodWarriorClient {
                 int value = Integer.parseInt(message);
                 if (value >= 0) {
                     opponentHp -= value;
-                    playDamageSound(value, "opponent");
                 } else {
                     hp += value;
-                    playDamageSound(-value, "player");
                 }
                 SwingUtilities.invokeLater(() -> {
                     gui.updateHp();
@@ -116,44 +117,6 @@ class HotBloodWarriorClient {
             }
         }
     }
-
-    public static void playDamageSound(int damage, String target) {
-        String soundPath = "C:/HotBloodWarrior/sound/";
-        if (target.equals("player")) {
-            switch (damage) {
-                case -5:
-                    soundPath += "damage_-5.wav";
-                    break;
-                case 10:
-                    soundPath += "damage_10.wav";
-                    break;
-                case 20:
-                    soundPath += "damage_20.wav";
-                    break;
-                default:
-                    soundPath += "damage_me.wav";
-                    break;
-            }
-        } else if (target.equals("opponent")) {
-            switch (damage) {
-                case -5:
-                    soundPath += "damage_-5.wav";
-                    break;
-                case 10:
-                    soundPath += "damage_10.wav";
-                    break;
-                case 20:
-                    soundPath += "damage_20.wav";
-                    break;
-                default:
-                    soundPath += "damage_enemy.wav";
-                    break;
-            }
-        }
-        playSound(soundPath);
-    }
-
-
 
     static class ClientGUI {
         JFrame frame;
@@ -217,13 +180,13 @@ class HotBloodWarriorClient {
             JPanel opponentStatusPanel = new JPanel(new BorderLayout());
 
             // Player Info
-            playerImageLabel = new JLabel(resizeImageIcon("C:/HotBloodWarrior/images/me.jpg", 450, 150));
+            playerImageLabel = new JLabel(resizeImageIcon(filePath + "images/me.jpg", 450, 150));
             selectedInfoLabel = new JLabel("", SwingConstants.CENTER);
             playerStatusPanel.add(playerImageLabel, BorderLayout.NORTH);
             playerStatusPanel.add(selectedInfoLabel, BorderLayout.SOUTH);
 
             // Opponent Info
-            opponentImageLabel = new JLabel(resizeImageIcon("C:/HotBloodWarrior/images/enemy.jpg", 450, 150));
+            opponentImageLabel = new JLabel(resizeImageIcon(filePath + "images/enemy.jpg", 450, 150));
             opponentInfoLabel = new JLabel("", SwingConstants.CENTER);
             opponentStatusPanel.add(opponentImageLabel, BorderLayout.NORTH);
             opponentStatusPanel.add(opponentInfoLabel, BorderLayout.SOUTH);
@@ -325,22 +288,25 @@ class HotBloodWarriorClient {
         public void updateButton(int x, int y, int value) {
             buttons[x][y].setText(""); // 텍스트 제거
             buttons[x][y].setIcon(resizeImageIcon(getImagePathForValue(value), 40, 40)); // 이미지 설정
+            playSoundForValue(value); // 효과음 재생
         }
 
         public void updateSelectedInfo(int x, int y, int value) {
             String imagePath = getImagePathForValue(value);
             selectedInfoLabel.setIcon(resizeImageIcon(imagePath, 40, 40));
             selectedInfoLabel.setText("위치: (" + x + ", " + y + "), 데미지: " + value);
+            playSoundForValue(value); // 효과음 재생
         }
 
         public void updateOpponentInfo(int value) {
             String imagePath = getImagePathForValue(value);
             opponentInfoLabel.setIcon(resizeImageIcon(imagePath, 40, 40));
             opponentInfoLabel.setText("상대가 선택한 데미지: " + value);
+            playSoundForValue(value); // 효과음 재생
         }
 
         private String getImagePathForValue(int value) {
-            return "C:/HotBloodWarrior/images/damage" + value + ".jpg";
+            return filePath + "images/damage" + value + ".jpg";
         }
 
         private ImageIcon resizeImageIcon(String path, int width, int height) {
@@ -348,6 +314,40 @@ class HotBloodWarriorClient {
             Image image = icon.getImage();
             Image newImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
             return new ImageIcon(newImage);
+        }
+        
+        private void playSoundForValue(int value) {
+            String soundFilePath = getSoundPathForValue(value);
+            playSound(soundFilePath);
+        }
+        
+        private String getSoundPathForValue(int value) {
+            switch (value) {
+                case -5:
+                    return filePath + "sound/damage_teemo.wav";
+                case 10:
+                    return filePath + "sound/damage_10.wav";
+                case 20:
+                    return filePath + "sound/damage_20.wav";
+                default:
+                    return filePath + "sound/damage_normal.wav";
+            }
+        }
+        
+        private void playSound(String filePath) {
+            try {
+                File soundFile = new File(filePath);
+                if (soundFile.exists()) {
+                    AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+                    Clip clip = AudioSystem.getClip();
+                    clip.open(audioInputStream);
+                    clip.start();
+                } else {
+                    System.out.println("Sound file not found: " + filePath);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -368,22 +368,4 @@ class HotBloodWarriorClient {
             e.printStackTrace();
         }
     }
-    
-    public static void playSound(String filePath) {
-        try {
-            File soundFile = new File(filePath);
-            if (soundFile.exists()) {
-                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
-                Clip clip = AudioSystem.getClip();
-                clip.open(audioInputStream);
-                clip.start();
-            } else {
-                System.out.println("Sound file not found: " + filePath);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-
 }

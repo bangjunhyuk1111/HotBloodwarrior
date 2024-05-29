@@ -3,6 +3,7 @@ import java.net.*;
 import java.util.*;
 import javax.swing.*;
 import java.awt.*;
+import javax.sound.sampled.*;
 
 public class HotBloodWarriorServer {
     public static int inPort = 9999;
@@ -15,8 +16,21 @@ public class HotBloodWarriorServer {
     public static int currentPlayerTurn = 0; // 현재 턴인 플레이어
 
     private ServerGUI gui;
+    public static String filePath; // 파일 경로 변수 추가
 
     public static void main(String[] args) throws Exception {
+        // 운영 체제 감지 및 filePath 설정
+        String userHomeDir = System.getProperty("user.home");
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (osName.contains("windows")) {
+            filePath = "C:/HotBloodWarrior/";
+        } else if (osName.contains("mac")) {
+            filePath = userHomeDir + "/Desktop/HotBloodwarrior/CUSTOM/";
+        } else {
+            System.out.println("Unsupported operating system");
+            return;
+        }
+
         new HotBloodWarriorServer().createServer();
     }
 
@@ -103,10 +117,45 @@ public class HotBloodWarriorServer {
                         sendToAll("HP " + hp[0] + " " + hp[1]);
                         clients.get(opponentId).send("opponentValue," + x + "," + y + "," + value); // 상대방에게 선택 정보 전송
                         gui.updateHp();
+                        playSoundForValue(value); // 효과음 재생
                         nextPlayerTurn();
                     }
                 }
             } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private void playSoundForValue(int value) {
+            String soundFilePath = getSoundPathForValue(value);
+            playSound(soundFilePath);
+        }
+
+        private String getSoundPathForValue(int value) {
+            switch (value) {
+                case -5:
+                    return filePath + "sound/damage_teemo.wav";
+                case 10:
+                    return filePath + "sound/damage_10.wav";
+                case 20:
+                    return filePath + "sound/damage_20.wav";
+                default:
+                    return filePath + "sound/damage_normal.wav";
+            }
+        }
+
+        private void playSound(String filePath) {
+            try {
+                File soundFile = new File(filePath);
+                if (soundFile.exists()) {
+                    AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+                    Clip clip = AudioSystem.getClip();
+                    clip.open(audioInputStream);
+                    clip.start();
+                } else {
+                    System.out.println("Sound file not found: " + filePath);
+                }
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
