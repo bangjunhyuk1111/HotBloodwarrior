@@ -33,13 +33,10 @@ public class Map {
             y2 = randx.nextInt(10);
         }
         map[x2][y2] = 10;
-
-
     }
 
     public int checkCell(int x, int y) {
         int value = map[x][y];
-        map[x][y] = Integer.MIN_VALUE; // 이 칸은 이미 선택되었음을 표시
         return value;
     }
 
