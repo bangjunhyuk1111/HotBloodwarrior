@@ -3,6 +3,7 @@ import java.net.*;
 import java.util.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import javax.sound.sampled.*;
 
 class HotBloodWarriorClient {
@@ -21,9 +22,29 @@ class HotBloodWarriorClient {
     static boolean myTurn = false;
     static int turn = 1;
     static String filePath; // 파일 경로 변수 추가
+    static Socket socket; // 소켓을 static으로 변경하여 다른 메서드에서도 접근 가능하도록 함
 
     public static void main(String[] args) {
-        try (Socket socket = new Socket(address, inPort)) {
+        connectToServer();
+
+        // 종료 시 서버에 알리고 소켓 닫기
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                if (out != null) {
+                    out.println("종료");
+                }
+                if (socket != null && !socket.isClosed()) {
+                    socket.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+    }
+
+    public static void connectToServer() {
+        try {
+            socket = new Socket(address, inPort);
             out = new PrintWriter(socket.getOutputStream(), true);
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
@@ -68,11 +89,19 @@ class HotBloodWarriorClient {
             SwingUtilities.invokeLater(() -> {
                 gui.updateHp();
                 if (hp <= 0) {
-                    JOptionPane.showMessageDialog(null, "상대에게 패배했다...  수련을 통해 더욱 정진하자... ");
+                    int option = JOptionPane.showConfirmDialog(null, "상대에게 패배했다...  수련을 통해 더욱 정진하자... ", "게임 종료", JOptionPane.DEFAULT_OPTION);
+                    if (option == JOptionPane.OK_OPTION) {
+                        out.println("종료");
+                        System.exit(0);
+                    }
                 }
 
                 if (opponentHp <= 0) {
-                    JOptionPane.showMessageDialog(null, "무자비하게 상대를 박살냈다!!!  이 세상에 나를 막을 자는 없다!!! ");
+                    int option = JOptionPane.showConfirmDialog(null, "무자비하게 상대를 박살냈다!!!  이 세상에 나를 막을 자는 없다!!! ", "게임 종료", JOptionPane.DEFAULT_OPTION);
+                    if (option == JOptionPane.OK_OPTION) {
+                        out.println("종료");
+                        System.exit(0);
+                    }
                 }
 
             });
