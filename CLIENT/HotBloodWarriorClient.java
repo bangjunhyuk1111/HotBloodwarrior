@@ -7,7 +7,11 @@ import javax.sound.sampled.*;
 
 class HotBloodWarriorClient {
     static int inPort = 9999;
+<<<<<<< HEAD
     static String address = "172.20.10.2"; // 서버 주소
+=======
+    static String address = "localhost"; // 서버 주소
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
     static public PrintWriter out;
     static public BufferedReader in;
     static String userName = "Ikjae";
@@ -21,6 +25,10 @@ class HotBloodWarriorClient {
     static boolean myTurn = false;
     static int turn = 1;
     static String filePath; // 파일 경로 변수 추가
+<<<<<<< HEAD
+=======
+    static boolean selectedskill = false;
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
 
     public static void main(String[] args) {
         try (Socket socket = new Socket(address, inPort)) {
@@ -69,10 +77,21 @@ class HotBloodWarriorClient {
                 gui.updateHp();
                 if (hp <= 0) {
                     JOptionPane.showMessageDialog(null, "상대에게 패배했다...  수련을 통해 더욱 정진하자... ");
+<<<<<<< HEAD
+=======
+                    out.println("종료");
+                    System.exit(0);
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
                 }
 
                 if (opponentHp <= 0) {
                     JOptionPane.showMessageDialog(null, "무자비하게 상대를 박살냈다!!!  이 세상에 나를 막을 자는 없다!!! ");
+<<<<<<< HEAD
+=======
+                    out.println("종료");
+                    System.exit(0);
+
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
                 }
 
             });
@@ -140,7 +159,11 @@ class HotBloodWarriorClient {
         public void createAndShowGUI() {
             frame = new JFrame("HotBloodWarrior Client");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+<<<<<<< HEAD
             frame.setSize(800, 780);  // 프레임 크기를 적절히 조정
+=======
+            frame.setSize(800, 830);  // 프레임 크기를 적절히 조정
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
 
             mainPanel = new JPanel(new BorderLayout());
 
@@ -224,9 +247,29 @@ class HotBloodWarriorClient {
             turnLabel.setPreferredSize(new Dimension(800, 30)); // 박스 크기 조정
             messagePanel.add(turnLabel);
 
+<<<<<<< HEAD
             JPanel bottomPanel = new JPanel(new BorderLayout());
             bottomPanel.add(messagePanel, BorderLayout.NORTH);
             bottomPanel.add(new JScrollPane(mapPanel), BorderLayout.CENTER);
+=======
+            // 스킬 아이콘 패널 생성
+            JPanel skillPanel = new JPanel(new GridLayout(1, 4)); // 1행 4열의 그리드 레이아웃을 가진 패널. 스킬 수에 맞게 조정하세요.
+
+            // 스킬 아이콘 추가 예시
+            JButton skill1Button = new JButton(resizeImageIcon(filePath + "images/jusa.jpeg",50,50));
+            skill1Button.addActionListener(e -> {
+                if(myTurn & !selectedskill) {
+                    out.println("아드레날린");
+                    skill1Button.setEnabled(false);
+                }
+            });
+            skillPanel.add(skill1Button);
+            JPanel bottomPanel = new JPanel(new BorderLayout());
+            bottomPanel.add(messagePanel, BorderLayout.NORTH);
+            bottomPanel.add(new JScrollPane(mapPanel), BorderLayout.CENTER);
+            bottomPanel.add(skillPanel, BorderLayout.SOUTH);
+
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
 
             mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -315,12 +358,20 @@ class HotBloodWarriorClient {
             Image newImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
             return new ImageIcon(newImage);
         }
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
         private void playSoundForValue(int value) {
             String soundFilePath = getSoundPathForValue(value);
             playSound(soundFilePath);
         }
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
         private String getSoundPathForValue(int value) {
             switch (value) {
                 case -5:
@@ -333,7 +384,11 @@ class HotBloodWarriorClient {
                     return filePath + "sound/damage_normal.wav";
             }
         }
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
         private void playSound(String filePath) {
             try {
                 File soundFile = new File(filePath);
@@ -368,4 +423,24 @@ class HotBloodWarriorClient {
             e.printStackTrace();
         }
     }
+<<<<<<< HEAD
+=======
+
+    public static void playSound(String filePath) {
+        try {
+            File soundFile = new File(filePath);
+            if (soundFile.exists()) {
+                AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(soundFile);
+                Clip clip = AudioSystem.getClip();
+                clip.open(audioInputStream);
+                clip.start();
+            } else {
+                System.out.println("Sound file not found: " + filePath);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+>>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
 }
