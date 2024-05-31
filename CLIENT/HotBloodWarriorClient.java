@@ -8,7 +8,7 @@ import javax.sound.sampled.*;
 
 class HotBloodWarriorClient {
     static int inPort = 9999;
-    static String address = "172.20.10.2"; // 서버 주소
+    static String address = "localhost"; // 서버 주소
     static public PrintWriter out;
     static public BufferedReader in;
     static String userName = "Ikjae";
@@ -397,8 +397,8 @@ class HotBloodWarriorClient {
 
         private String getSoundPathForValue(int value) {
             switch (value) {
-            	case -10:
-            		return filePath + "sound/damage_teemo.wav";
+                case -10:
+                    return filePath + "sound/damage_teemo.wav";
                 case -5:
                     return filePath + "sound/damage_teemo.wav";
                 case 10:
@@ -406,7 +406,7 @@ class HotBloodWarriorClient {
                 case 20:
                     return filePath + "sound/damage_20.wav";
                 case 40:
-                	return filePath + "sound/damage_40.wav";
+                    return filePath + "sound/damage_40.wav";
                 default:
                     return filePath + "sound/damage_normal.wav";
             }
@@ -439,7 +439,7 @@ class HotBloodWarriorClient {
         }
 
         public void updateSkill(String user, String skillName) {
-            chatArea.append("[Skill] " + user + "가 " + skillName + "스킬을 사용했다!\n");
+            chatArea.append("[Skill] " + user + " used " + skillName + "!\n");
 
             // 스킬 메시지 추가 후 스크롤 위치를 최하단으로 이동
             SwingUtilities.invokeLater(() -> {

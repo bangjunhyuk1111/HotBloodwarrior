@@ -126,15 +126,6 @@ public class HotBloodWarriorServer {
                         if (adrenalineState[currentPlayerTurn]) {
                             value *= 2; // 값을 2배로 조정
                             adrenalineState[currentPlayerTurn] = false; // 아드레날린 상태 해제
-                            send("value," + x + "," + y + "," + value);
-                            send("ok");
-                            sendToAll("HP " + hp[0] + " " + hp[1]);
-                            clients.get(opponentId).send("opponentValue," + x + "," + y + "," + value + ",skill"); // 상대방에게 선택 정보 전송
-                        } else {
-                            send("value," + x + "," + y + "," + value);
-                            send("ok");
-                            sendToAll("HP " + hp[0] + " " + hp[1]);
-                            clients.get(opponentId).send("opponentValue," + x + "," + y + "," + value); // 상대방에게 선택 정보 전송
                         }
 
                         if (value < 0) {
@@ -143,6 +134,11 @@ public class HotBloodWarriorServer {
                             hp[(currentPlayerTurn + 1) % maxPlayer] -= value; // 상대방의 HP 감소
                         }
 
+                        send("value," + x + "," + y + "," + value);
+                        sendToAll("HP " + hp[0] + " " + hp[1]);
+                        clients.get(opponentId).send("opponentValue," + x + "," + y + "," + value + (adrenalineState[currentPlayerTurn] ? ",skill" : ""));
+                        
+                        // GUI 업데이트
                         gui.updateHp();
                         playSoundForValue(value); // 효과음 재생
                         nextPlayerTurn();
@@ -164,8 +160,8 @@ public class HotBloodWarriorServer {
 
         private String getSoundPathForValue(int value) {
             switch (value) {
-            	case -10:
-            		return filePath + "sound/damage_teemo.wav";
+                case -10:
+                    return filePath + "sound/damage_teemo.wav";
                 case -5:
                     return filePath + "sound/damage_teemo.wav";
                 case 10:
@@ -173,7 +169,7 @@ public class HotBloodWarriorServer {
                 case 20:
                     return filePath + "sound/damage_20.wav";
                 case 40:
-                	return filePath + "sound/damage_40.wav";
+                    return filePath + "sound/damage_40.wav";
                 default:
                     return filePath + "sound/damage_normal.wav";
             }
