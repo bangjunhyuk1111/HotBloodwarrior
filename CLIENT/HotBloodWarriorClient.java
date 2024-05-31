@@ -3,15 +3,12 @@ import java.net.*;
 import java.util.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import javax.sound.sampled.*;
 
 class HotBloodWarriorClient {
     static int inPort = 9999;
-<<<<<<< HEAD
-    static String address = "172.20.10.2"; // 서버 주소
-=======
     static String address = "localhost"; // 서버 주소
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
     static public PrintWriter out;
     static public BufferedReader in;
     static String userName = "Ikjae";
@@ -25,10 +22,9 @@ class HotBloodWarriorClient {
     static boolean myTurn = false;
     static int turn = 1;
     static String filePath; // 파일 경로 변수 추가
-<<<<<<< HEAD
-=======
     static boolean selectedskill = false;
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
+    static boolean opponentUsedSkill = false;
+    static boolean playerUsedSkill = false;
 
     public static void main(String[] args) {
         try (Socket socket = new Socket(address, inPort)) {
@@ -77,31 +73,25 @@ class HotBloodWarriorClient {
                 gui.updateHp();
                 if (hp <= 0) {
                     JOptionPane.showMessageDialog(null, "상대에게 패배했다...  수련을 통해 더욱 정진하자... ");
-<<<<<<< HEAD
-=======
                     out.println("종료");
                     System.exit(0);
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
                 }
 
                 if (opponentHp <= 0) {
                     JOptionPane.showMessageDialog(null, "무자비하게 상대를 박살냈다!!!  이 세상에 나를 막을 자는 없다!!! ");
-<<<<<<< HEAD
-=======
                     out.println("종료");
                     System.exit(0);
-
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
                 }
-
             });
         } else if (message.equals("choose!")) {
             myTurn = true;
+            playerUsedSkill = false;  // 새로운 턴 시작 시 초기화
             SwingUtilities.invokeLater(() -> {
                 gui.updateTurnIndicator();
             });
         } else if (message.equals("waiting")) {
             myTurn = false;
+            opponentUsedSkill = false;  // 새로운 턴 시작 시 초기화
             SwingUtilities.invokeLater(() -> {
                 gui.updateTurnIndicator();
             });
@@ -117,8 +107,26 @@ class HotBloodWarriorClient {
         } else if (message.startsWith("opponentValue,")) {
             String[] arr = message.split(",");
             int value = Integer.parseInt(arr[3]);
+            opponentUsedSkill = arr.length > 4 && arr[4].equals("skill");
             SwingUtilities.invokeLater(() -> {
                 gui.updateOpponentInfo(value); // 상대가 선택한 칸 정보 업데이트
+            });
+        } else if (message.startsWith("chat:")) {
+            String chatMsg = message.substring(5);
+            SwingUtilities.invokeLater(() -> {
+                gui.updateChat(chatMsg);
+            });
+        } else if (message.startsWith("skill:")) {
+            String[] skillMsgParts = message.substring(6).split(",");
+            String user = skillMsgParts[0];
+            String skillName = skillMsgParts[1];
+            if (user.equals(userName)) {
+                playerUsedSkill = true;
+            } else {
+                opponentUsedSkill = true;
+            }
+            SwingUtilities.invokeLater(() -> {
+                gui.updateSkill(user, skillName);
             });
         } else {
             try {
@@ -149,6 +157,9 @@ class HotBloodWarriorClient {
         JLabel opponentImageLabel;
         JLabel selectedInfoLabel; // 선택된 칸 정보 라벨
         JLabel opponentInfoLabel; // 상대가 선택한 칸 정보 라벨
+        JTextArea chatArea;
+        JTextField chatInput;
+        JScrollPane chatScrollPane;
         JButton[][] buttons;
         Socket socket;
 
@@ -159,11 +170,7 @@ class HotBloodWarriorClient {
         public void createAndShowGUI() {
             frame = new JFrame("HotBloodWarrior Client");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-<<<<<<< HEAD
-            frame.setSize(800, 780);  // 프레임 크기를 적절히 조정
-=======
-            frame.setSize(800, 830);  // 프레임 크기를 적절히 조정
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
+            frame.setSize(1200, 900);  // 프레임 크기를 조정하여 채팅창 추가 공간 확보
 
             mainPanel = new JPanel(new BorderLayout());
 
@@ -247,31 +254,47 @@ class HotBloodWarriorClient {
             turnLabel.setPreferredSize(new Dimension(800, 30)); // 박스 크기 조정
             messagePanel.add(turnLabel);
 
-<<<<<<< HEAD
-            JPanel bottomPanel = new JPanel(new BorderLayout());
-            bottomPanel.add(messagePanel, BorderLayout.NORTH);
-            bottomPanel.add(new JScrollPane(mapPanel), BorderLayout.CENTER);
-=======
             // 스킬 아이콘 패널 생성
             JPanel skillPanel = new JPanel(new GridLayout(1, 4)); // 1행 4열의 그리드 레이아웃을 가진 패널. 스킬 수에 맞게 조정하세요.
 
             // 스킬 아이콘 추가 예시
-            JButton skill1Button = new JButton(resizeImageIcon(filePath + "images/jusa.jpeg",50,50));
+            JButton skill1Button = new JButton(resizeImageIcon(filePath + "images/jusa.jpeg", 50, 50));
             skill1Button.addActionListener(e -> {
-                if(myTurn & !selectedskill) {
+                if (myTurn && !selectedskill) {
                     out.println("아드레날린");
                     skill1Button.setEnabled(false);
                 }
             });
             skillPanel.add(skill1Button);
+
+            // 채팅창 패널 추가
+            JPanel chatPanel = new JPanel(new BorderLayout());
+            chatArea = new JTextArea();
+            chatArea.setEditable(false);
+            chatArea.setLineWrap(true);
+            chatArea.setWrapStyleWord(true);
+            chatScrollPane = new JScrollPane(chatArea);
+            chatScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+
+            chatInput = new JTextField();
+            chatInput.addActionListener(e -> {
+                String chatMsg = chatInput.getText();
+                if (!chatMsg.isEmpty()) {
+                    out.println("chat:" + chatMsg);
+                    chatInput.setText("");
+                }
+            });
+
+            chatPanel.add(chatScrollPane, BorderLayout.CENTER);
+            chatPanel.add(chatInput, BorderLayout.SOUTH);
+
             JPanel bottomPanel = new JPanel(new BorderLayout());
             bottomPanel.add(messagePanel, BorderLayout.NORTH);
             bottomPanel.add(new JScrollPane(mapPanel), BorderLayout.CENTER);
             bottomPanel.add(skillPanel, BorderLayout.SOUTH);
 
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
-
             mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+            mainPanel.add(chatPanel, BorderLayout.EAST);
 
             frame.add(mainPanel);
             frame.setVisible(true);
@@ -323,9 +346,7 @@ class HotBloodWarriorClient {
                         turnLabel.setText("알고 계셨나요? 대부분 역북의 밥집은 즐삼 선에서 컷입니다.");
                         break;
                 }
-
             }
-
         }
 
         public void updateButton(int x, int y, int value) {
@@ -337,14 +358,24 @@ class HotBloodWarriorClient {
         public void updateSelectedInfo(int x, int y, int value) {
             String imagePath = getImagePathForValue(value);
             selectedInfoLabel.setIcon(resizeImageIcon(imagePath, 40, 40));
-            selectedInfoLabel.setText("위치: (" + x + ", " + y + "), 데미지: " + value);
+            if (playerUsedSkill) {
+                selectedInfoLabel.setText("흐흐흐...온몸에 아드레날린이 흐른다... 강해진게 느껴지는 걸??? 데미지: " + value);
+                playerUsedSkill = false; // 스킬 사용 상태 리셋
+            } else {
+                selectedInfoLabel.setText("위치: (" + x + ", " + y + "), 데미지: " + value);
+            }
             playSoundForValue(value); // 효과음 재생
         }
 
         public void updateOpponentInfo(int value) {
             String imagePath = getImagePathForValue(value);
             opponentInfoLabel.setIcon(resizeImageIcon(imagePath, 40, 40));
-            opponentInfoLabel.setText("상대가 선택한 데미지: " + value);
+            if (opponentUsedSkill) {
+                opponentInfoLabel.setText("상대가 스킬을 사용했다!! 무슨 약을 먹길래 이렇게 센거지? 받은 데미지: " + value);
+                opponentUsedSkill = false; // 스킬 사용 상태 리셋
+            } else {
+                opponentInfoLabel.setText("상대가 선택한 데미지: " + value);
+            }
             playSoundForValue(value); // 효과음 재생
         }
 
@@ -358,37 +389,29 @@ class HotBloodWarriorClient {
             Image newImage = image.getScaledInstance(width, height, Image.SCALE_SMOOTH);
             return new ImageIcon(newImage);
         }
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
         private void playSoundForValue(int value) {
             String soundFilePath = getSoundPathForValue(value);
             playSound(soundFilePath);
         }
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
         private String getSoundPathForValue(int value) {
             switch (value) {
+            	case -10:
+            		return filePath + "sound/damage_teemo.wav";
                 case -5:
                     return filePath + "sound/damage_teemo.wav";
                 case 10:
                     return filePath + "sound/damage_10.wav";
                 case 20:
                     return filePath + "sound/damage_20.wav";
+                case 40:
+                	return filePath + "sound/damage_40.wav";
                 default:
                     return filePath + "sound/damage_normal.wav";
             }
         }
-<<<<<<< HEAD
-        
-=======
 
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
         private void playSound(String filePath) {
             try {
                 File soundFile = new File(filePath);
@@ -403,6 +426,26 @@ class HotBloodWarriorClient {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        public void updateChat(String message) {
+            chatArea.append(message + "\n");
+
+            // 채팅 메시지 추가 후 스크롤 위치를 최하단으로 이동
+            SwingUtilities.invokeLater(() -> {
+                JScrollBar verticalBar = chatScrollPane.getVerticalScrollBar();
+                verticalBar.setValue(verticalBar.getMaximum());
+            });
+        }
+
+        public void updateSkill(String user, String skillName) {
+            chatArea.append("[Skill] " + user + " used " + skillName + "!\n");
+
+            // 스킬 메시지 추가 후 스크롤 위치를 최하단으로 이동
+            SwingUtilities.invokeLater(() -> {
+                JScrollBar verticalBar = chatScrollPane.getVerticalScrollBar();
+                verticalBar.setValue(verticalBar.getMaximum());
+            });
         }
     }
 
@@ -423,8 +466,6 @@ class HotBloodWarriorClient {
             e.printStackTrace();
         }
     }
-<<<<<<< HEAD
-=======
 
     public static void playSound(String filePath) {
         try {
@@ -441,6 +482,4 @@ class HotBloodWarriorClient {
             e.printStackTrace();
         }
     }
-
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
 }

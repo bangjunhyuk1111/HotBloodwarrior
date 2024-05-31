@@ -3,6 +3,7 @@ import java.net.*;
 import java.util.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 import javax.sound.sampled.*;
 
 public class HotBloodWarriorServer {
@@ -14,10 +15,7 @@ public class HotBloodWarriorServer {
     public static Map map;
     public static int[] hp = {50, 50};  // 각 플레이어의 초기 HP
     public static int currentPlayerTurn = 0; // 현재 턴인 플레이어
-<<<<<<< HEAD
-=======
     boolean[] adrenalineState = new boolean[maxPlayer]; // 모든 플레이어에 대한 아드레날린 상태
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
 
     private ServerGUI gui;
     public static String filePath; // 파일 경로 변수 추가
@@ -67,8 +65,9 @@ public class HotBloodWarriorServer {
     }
 
     public void sendToAll(String msg) {
-        for (Client c : clients)
+        for (Client c : clients) {
             c.send(msg);
+        }
     }
 
     class Client extends Thread {
@@ -106,20 +105,18 @@ public class HotBloodWarriorServer {
             try {
                 while (true) {
                     msg = in.readLine();
-<<<<<<< HEAD
-                    if (msg != null && this.playerId == currentPlayerTurn) {
-                        String[] arr = msg.split(",");
-                        x = Integer.parseInt(arr[0]);
-                        y = Integer.parseInt(arr[1]);
-                        int value = map.checkCell(x, y);
-=======
+                    
+                    // 채팅 메시지 처리
+                    if (msg.startsWith("chat:")) {
+                        String chatMsg = msg.substring(5);
+                        sendToAll("chat:" + userName + ": " + chatMsg);
+                        continue;
+                    }
 
                     if (msg.equals("아드레날린") && this.playerId == currentPlayerTurn) {
                         adrenalineState[currentPlayerTurn] = true; // 아드레날린 상태 활성
-                    }
-
-                    else if (msg != null && this.playerId == currentPlayerTurn) {
-
+                        sendToAll("skill:" + userName + ",Adrenaline");
+                    } else if (msg != null && this.playerId == currentPlayerTurn) {
                         String[] arr = msg.split(",");
                         x = Integer.parseInt(arr[0]);
                         y = Integer.parseInt(arr[1]);
@@ -129,17 +126,23 @@ public class HotBloodWarriorServer {
                         if (adrenalineState[currentPlayerTurn]) {
                             value *= 2; // 값을 2배로 조정
                             adrenalineState[currentPlayerTurn] = false; // 아드레날린 상태 해제
+                            send("value," + x + "," + y + "," + value);
+                            send("ok");
+                            sendToAll("HP " + hp[0] + " " + hp[1]);
+                            clients.get(opponentId).send("opponentValue," + x + "," + y + "," + value + ",skill"); // 상대방에게 선택 정보 전송
+                        } else {
+                            send("value," + x + "," + y + "," + value);
+                            send("ok");
+                            sendToAll("HP " + hp[0] + " " + hp[1]);
+                            clients.get(opponentId).send("opponentValue," + x + "," + y + "," + value); // 상대방에게 선택 정보 전송
                         }
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
+
                         if (value < 0) {
                             hp[currentPlayerTurn] += value; // 자신의 HP 감소
                         } else {
                             hp[(currentPlayerTurn + 1) % maxPlayer] -= value; // 상대방의 HP 감소
                         }
-                        send("value," + x + "," + y + "," + value);
-                        send("ok");
-                        sendToAll("HP " + hp[0] + " " + hp[1]);
-                        clients.get(opponentId).send("opponentValue," + x + "," + y + "," + value); // 상대방에게 선택 정보 전송
+
                         gui.updateHp();
                         playSoundForValue(value); // 효과음 재생
                         nextPlayerTurn();
@@ -150,6 +153,10 @@ public class HotBloodWarriorServer {
             }
         }
 
+        public void send(String msg) {
+            out.println(msg);
+        }
+
         private void playSoundForValue(int value) {
             String soundFilePath = getSoundPathForValue(value);
             playSound(soundFilePath);
@@ -157,12 +164,16 @@ public class HotBloodWarriorServer {
 
         private String getSoundPathForValue(int value) {
             switch (value) {
+            	case -10:
+            		return filePath + "sound/damage_teemo.wav";
                 case -5:
                     return filePath + "sound/damage_teemo.wav";
                 case 10:
                     return filePath + "sound/damage_10.wav";
                 case 20:
                     return filePath + "sound/damage_20.wav";
+                case 40:
+                	return filePath + "sound/damage_40.wav";
                 default:
                     return filePath + "sound/damage_normal.wav";
             }
@@ -187,10 +198,6 @@ public class HotBloodWarriorServer {
         private void nextPlayerTurn() {
             currentPlayerTurn = (currentPlayerTurn + 1) % maxPlayer; // 다음 플레이어로 순환
             HotBloodWarriorServer.this.clients.get(currentPlayerTurn).send("choose!");
-        }
-
-        public void send(String msg) {
-            out.println(msg);
         }
     }
 
@@ -253,8 +260,4 @@ public class HotBloodWarriorServer {
             }
         }
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 700f90c6f5d0e77b563d74f9ebb5dd91bed1e77b
