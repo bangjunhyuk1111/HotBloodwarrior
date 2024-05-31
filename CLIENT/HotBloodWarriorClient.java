@@ -8,7 +8,7 @@ import javax.sound.sampled.*;
 
 class HotBloodWarriorClient {
     static int inPort = 9999;
-    static String address = "localhost"; // 서버 주소
+    static String address = "172.20.10.2"; // 서버 주소
     static public PrintWriter out;
     static public BufferedReader in;
     static String userName = "Ikjae";
